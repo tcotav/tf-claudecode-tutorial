@@ -50,7 +50,7 @@ Why 512Mi memory and concurrency of 80 specifically? What would happen if the se
 ## Step 4: Run terraform plan
 
 ```
-Run terraform plan and walk me through what it shows. I want to understand every line of the output.
+Run /tf-plan and walk me through what it shows. I want to understand every line of the output.
 ```
 
 **What happens:** You'll see a hook prompt asking for approval before `terraform plan` runs. This is the safety hook working as intended — approve it.

@@ -26,9 +26,12 @@ def _no_audit_log():
         yield
 
 
+# _suppress_container_warning fixture is provided by conftest.py
+
 # ---------------------------------------------------------------------------
 # Blocked commands  (decision="deny", should_block=True)
 # ---------------------------------------------------------------------------
+
 
 class TestBlockedCommands:
     """Commands that must be denied outright."""
@@ -54,7 +57,9 @@ class TestBlockedCommands:
         "cmd",
         [
             pytest.param("terraform state rm aws_instance.foo", id="state-rm"),
-            pytest.param("terraform state mv aws_instance.a aws_instance.b", id="state-mv"),
+            pytest.param(
+                "terraform state mv aws_instance.a aws_instance.b", id="state-mv"
+            ),
             pytest.param("terraform state push", id="state-push"),
             pytest.param("terraform state pull", id="state-pull"),
         ],
@@ -82,7 +87,9 @@ class TestBlockedCommands:
         "cmd",
         [
             pytest.param("terraform -chdir=../prod apply", id="chdir"),
-            pytest.param("terraform -chdir=../prod -no-color apply", id="chdir-nocolor"),
+            pytest.param(
+                "terraform -chdir=../prod -no-color apply", id="chdir-nocolor"
+            ),
             pytest.param("tf -chdir=envs/staging destroy", id="alias-chdir-destroy"),
         ],
     )
@@ -117,6 +124,7 @@ class TestBlockedCommands:
 # Prompted commands  (decision="ask", should_block=False)
 # ---------------------------------------------------------------------------
 
+
 class TestPromptedCommands:
     """Safe terraform commands that require user approval."""
 
@@ -126,7 +134,9 @@ class TestPromptedCommands:
             pytest.param("terraform plan", id="plan"),
             pytest.param("terraform init", id="init"),
             pytest.param("terraform init -no-color", id="init-nocolor"),
-            pytest.param("terraform plan -lock=false -no-color", id="plan-lock-nocolor"),
+            pytest.param(
+                "terraform plan -lock=false -no-color", id="plan-lock-nocolor"
+            ),
             pytest.param("terraform fmt", id="fmt"),
             pytest.param("terraform validate", id="validate"),
             pytest.param("terraform output", id="output"),
@@ -147,6 +157,7 @@ class TestPromptedCommands:
 # ---------------------------------------------------------------------------
 # Non-matching commands  (decision="allow", should_block=False)
 # ---------------------------------------------------------------------------
+
 
 class TestNonMatchingCommands:
     """Commands that are not terraform-related at all."""
@@ -178,6 +189,7 @@ class TestNonMatchingCommands:
 # Suspicious keyword detection
 # ---------------------------------------------------------------------------
 
+
 class TestSuspiciousKeywords:
     """Indirection patterns that contain blocked keywords without matching
     the structured block patterns."""
@@ -185,9 +197,9 @@ class TestSuspiciousKeywords:
     @pytest.mark.parametrize(
         "cmd",
         [
-            pytest.param('cmd=apply; terraform $cmd', id="variable-apply"),
-            pytest.param('terraform $(echo destroy)', id="subshell-destroy"),
-            pytest.param('action=taint; tf $action resource', id="variable-taint"),
+            pytest.param("cmd=apply; terraform $cmd", id="variable-apply"),
+            pytest.param("terraform $(echo destroy)", id="subshell-destroy"),
+            pytest.param("action=taint; tf $action resource", id="variable-taint"),
         ],
     )
     def test_suspicious_warned(self, cmd):
@@ -207,6 +219,7 @@ class TestSuspiciousKeywords:
 # ---------------------------------------------------------------------------
 # False positive resistance
 # ---------------------------------------------------------------------------
+
 
 class TestFalsePositiveResistance:
     """Commands that contain blocked keywords in non-subcommand positions
@@ -230,13 +243,28 @@ class TestFalsePositiveResistance:
         assert blocked is False
         assert "WARNING" not in reason
 
+    def test_terraform_keyword_in_commit_message(self):
+        """'terraform' and a blocked keyword appearing only inside a git commit
+        message must not trigger a block or prompt."""
+        cmd = 'git commit -m "docs: clarify terraform apply workflow and destroy risks"'
+        decision, _, blocked = check_command(cmd, CWD)
+        assert decision == "allow"
+        assert blocked is False
+
+    def test_terraform_keyword_in_chained_commit(self):
+        """'terraform' inside a commit message in a chained command must not match."""
+        cmd = 'git add . && git commit -m "remove stale terraform apply examples"'
+        decision, _, blocked = check_command(cmd, CWD)
+        assert decision == "allow"
+        assert blocked is False
+
 
 # ---------------------------------------------------------------------------
 # Case insensitivity
 # ---------------------------------------------------------------------------
 
-class TestCaseInsensitivity:
 
+class TestCaseInsensitivity:
     def test_uppercase_blocked(self):
         decision, _, blocked = check_command("TERRAFORM APPLY", CWD)
         assert decision == "deny"

@@ -26,7 +26,11 @@ You review and approve each action, you are responsible for the work product, yo
 ├── settings.json              # Hook configuration (committed)
 ├── hooks/
 │   ├── terraform-validator.py # Pre-execution validation for terraform
-│   └── terraform-logger.py    # Post-execution logging for terraform
+│   ├── terraform-logger.py    # Post-execution logging for terraform
+│   ├── hook_utils.py          # Shared utilities for hook scripts
+│   └── conftest.py            # Shared pytest fixtures
+├── skills/
+│   └── tf-plan/SKILL.md       # /tf-plan skill: fmt → init → plan → explain
 └── audit/                     # Command audit trail (gitignored)
 
 docs/
@@ -67,9 +71,17 @@ CLAUDE.md -> AGENTS.md         # Symlink for backwards compatibility
 
 ## Terraform Workflow
 
-### Local Validation Workflow
+### Available Skills
 
-**Allowed commands for local validation:**
+The `/tf-plan` skill is installed in `.claude/skills/tf-plan/`. Use it when validating terraform changes:
+
+- `/tf-plan` — runs fmt → init (if needed) → plan, then provides a structured summary of what will change
+
+This is the recommended way to validate changes. It detects whether `tofu` or `terraform` is available, handles init automatically, and formats output for easy review. It never runs `apply`.
+
+### Local Validation Workflow (Manual)
+
+If running commands directly rather than via `/tf-plan`:
 
 ```bash
 terraform init -no-color                    # Initialize providers and modules
@@ -91,7 +103,7 @@ terraform state show <resource>             # Inspect a specific resource in sta
 **All terraform deployments must go through GitHub Pull Requests:**
 
 1. Make terraform changes locally
-2. Run `terraform init -no-color` and `terraform plan -lock=false -no-color` to verify
+2. Run `/tf-plan` (or `terraform plan -lock=false -no-color`) to verify
 3. Commit changes and create a GitHub PR
 4. CI runs `terraform plan` and posts output to the PR for review
 5. After review and approval, apply happens via CI or a controlled manual step
@@ -110,9 +122,11 @@ When making terraform changes, follow this lifecycle:
 **2. Ask the User to Verify**
 After making changes, always ask:
 
-> "Would you like me to run terraform plan to check what this will change? (plan only — no resources will be applied)"
+> "Would you like me to validate these changes with `/tf-plan`? (runs fmt, init if needed, and plan — no resources will be applied)"
 
 **3. Run Validation (if user approves)**
+
+Use `/tf-plan` or manually:
 
 ```bash
 terraform init -no-color
@@ -130,7 +144,7 @@ terraform plan -lock=false -no-color
 ### [.claude/hooks/terraform-validator.py](./.claude/hooks/terraform-validator.py)
 
 Pre-execution hook that:
-- Checks if a command matches terraform patterns (terraform, tf, tform)
+- Uses `get_tool_stages()` from `hook_utils.py` to check only stages where terraform is the executable (prevents false positives in git commit messages or comments)
 - Blocks dangerous commands (apply, destroy, import, state manipulation)
 - Prompts for user approval on safe commands (plan, init, validate, fmt, etc.)
 - Logs all attempts to `.claude/audit/terraform-YYYY-MM-DD.log`
@@ -138,6 +152,18 @@ Pre-execution hook that:
 ### [.claude/hooks/terraform-logger.py](./.claude/hooks/terraform-logger.py)
 
 Post-execution hook that records the result (success/failure, exit code) of any terraform command that was approved and ran.
+
+### [.claude/hooks/hook_utils.py](./.claude/hooks/hook_utils.py)
+
+Shared utilities used by both validator and logger:
+- `get_tool_stages()` — splits a command on shell operators and returns only stages where the tool is the executable
+- `get_dated_audit_log_path()` — daily-rotated audit log path
+- `log_command()` / `log_result()` — audit log writers
+- `get_container_warning()` — devcontainer reminder
+
+### [.claude/skills/tf-plan/SKILL.md](./.claude/skills/tf-plan/SKILL.md)
+
+The `/tf-plan` skill. Invoked with `/tf-plan [directory]`. Runs fmt → init (if needed) → plan and provides a structured summary. Detects `tofu` vs `terraform` automatically. Never runs apply.
 
 ### [.claude/settings.json](./.claude/settings.json)
 
@@ -156,7 +182,7 @@ chmod +x .claude/hooks/*.py
 pytest .claude/hooks/
 ```
 
-Tests verify that blocked commands are denied, safe commands prompt for approval, and non-terraform commands pass through unchanged.
+Tests verify that blocked commands are denied, safe commands prompt for approval, non-terraform commands pass through unchanged, and terraform keywords inside git commit messages do not trigger false positives.
 
 ---
 

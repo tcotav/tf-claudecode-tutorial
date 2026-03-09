@@ -65,7 +65,7 @@ How will this bucket be named? What are the constraints on GCS bucket names and 
 ## Step 5: Run terraform plan
 
 ```
-Run terraform plan. For each resource being added, explain what will be created and why the order matters.
+Run /tf-plan. For each resource being added, explain what will be created and why the order matters.
 ```
 
 **What to look for in the plan output:**

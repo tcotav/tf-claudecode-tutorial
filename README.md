@@ -85,3 +85,7 @@ All other terraform commands (`plan`, `init`, `validate`, `fmt`, `output`) promp
 ## What Stays the Same
 
 The hooks only affect Claude Code. You can still run any terraform command directly in your terminal.
+
+## Credits
+
+The Claude Code safety hooks (`.claude/hooks/`) and the `/tf-plan` skill (`.claude/skills/tf-plan/`) are sourced from [ccode_infra_starter](https://github.com/tcotav/ccode_infra_starter), a template for teams using Claude Code safely with terraform and Helm.
