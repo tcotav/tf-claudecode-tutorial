@@ -1,0 +1,33 @@
+# Claude Code audit logs (contain user-specific command history)
+.claude/audit/
+
+# Claude Code local settings (user-specific overrides)
+.claude/settings.local.json
+
+# AI agent personal context files (user preferences, never commit)
+AGENTS.local.md
+**/AGENTS.local.md
+CLAUDE.local.md
+**/CLAUDE.local.md
+
+# Python bytecode cache
+__pycache__/
+
+# Virtual environment
+.venv/
+
+# Pytest cache
+.pytest_cache/
+
+# Terraform state and working files
+*.tfstate
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+*.tfplan
+crash.log
+crash.*.log
+
+# Terraform variable files with sensitive values
+terraform.tfvars
+*.auto.tfvars
