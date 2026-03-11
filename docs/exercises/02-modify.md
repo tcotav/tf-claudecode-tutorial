@@ -1,6 +1,10 @@
 # Exercise 02: Modify an Existing Resource
 
-**Goal:** Make a targeted change to the Cloud Run service, review what Claude changed, and run terraform plan to understand the impact.
+**Goal:** Make a targeted change to the Cloud Run service, review what Claude changed, and validate the impact using a Claude Code skill.
+
+You'll also be introduced to **skills** — reusable prompt workflows that encapsulate a sequence of steps into a single command. The `/tf-plan` skill makes its first appearance in this exercise.
+
+Skills are a Claude Code feature. You can read more about them in the [Claude Code documentation](https://docs.anthropic.com/en/docs/claude-code/slash-commands). To see exactly what `/tf-plan` does, read the skill definition at `.claude/skills/tf-plan/SKILL.md`.
 
 ---
 
@@ -48,6 +52,8 @@ Why 512Mi memory and concurrency of 80 specifically? What would happen if the se
 ---
 
 ## Step 4: Run terraform plan
+
+This step uses `/tf-plan` — a Claude Code skill installed in `.claude/skills/tf-plan/`. A skill is a reusable prompt workflow: instead of running `terraform fmt`, `terraform init`, and `terraform plan` as separate commands, `/tf-plan` sequences them automatically and summarizes the output. You invoke it like a slash command directly in Claude Code.
 
 ```
 Run /tf-plan and walk me through what it shows. I want to understand every line of the output.
