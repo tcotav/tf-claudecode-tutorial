@@ -4,6 +4,19 @@
 
 ---
 
+## Before You Start
+
+This exercise depends on the safety hooks being active and working. If you skipped the hook verification step in setup, go back and run it now:
+
+```bash
+source .venv/bin/activate
+pytest .claude/hooks/
+```
+
+All tests must pass. If any fail, the blocks in this exercise will not work as described.
+
+---
+
 ## Why This Matters
 
 The hooks aren't just a guardrail for Claude — they encode a workflow. Understanding what gets blocked, why, and what the correct alternative is will change how you think about infrastructure changes in general.

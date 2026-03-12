@@ -35,7 +35,9 @@ cd tftutorial
 chmod +x .claude/hooks/*.py
 ```
 
-**2. Verify the hooks work:**
+**2. Verify the hooks work — do not skip this step:**
+
+The safety hooks are what prevent Claude Code from running `terraform apply` or `terraform destroy`. If they are not working, there is no safety net.
 
 ```bash
 python3 -m venv .venv
@@ -43,6 +45,8 @@ source .venv/bin/activate
 pip install -r requirements.txt
 pytest .claude/hooks/
 ```
+
+All tests must pass before continuing. If any fail, do not proceed — fix the issue first. Common causes: Python version mismatch, missing execute permissions (`chmod +x .claude/hooks/*.py`), or a missing dependency.
 
 **3. Set your GCP project in `locals.tf`:**
 
