@@ -76,6 +76,8 @@ class TestBlockedCommands:
             pytest.param("tf destroy", id="tf-destroy"),
             pytest.param("tform apply", id="tform-apply"),
             pytest.param("tform destroy", id="tform-destroy"),
+            pytest.param("tofu apply", id="tofu-apply"),
+            pytest.param("tofu destroy", id="tofu-destroy"),
         ],
     )
     def test_aliases_blocked(self, cmd):
@@ -145,6 +147,9 @@ class TestPromptedCommands:
             pytest.param("terraform providers", id="providers"),
             pytest.param("tf plan", id="tf-plan"),
             pytest.param("tform init", id="tform-init"),
+            pytest.param("tofu plan", id="tofu-plan"),
+            pytest.param("tofu init -no-color", id="tofu-init-nocolor"),
+            pytest.param("tofu fmt -recursive", id="tofu-fmt-recursive"),
         ],
     )
     def test_safe_commands_prompt(self, cmd):
