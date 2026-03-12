@@ -31,7 +31,7 @@ This repo ships with a pre-written `AGENTS.md` covering the safety rules and ter
 
 ```bash
 git clone <this-repo-url>
-cd tftutorial
+cd tf-claudecode-tutorial
 chmod +x .claude/hooks/*.py
 ```
 
