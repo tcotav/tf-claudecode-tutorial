@@ -40,13 +40,11 @@ chmod +x .claude/hooks/*.py
 The safety hooks are what prevent Claude Code from running `terraform apply` or `terraform destroy`. If they are not working, there is no safety net.
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
 pip install -r requirements.txt
-pytest .claude/hooks/
+./check-hooks.sh
 ```
 
-All tests must pass before continuing. If any fail, do not proceed — fix the issue first. Common causes: Python version mismatch, missing execute permissions (`chmod +x .claude/hooks/*.py`), or a missing dependency.
+All checks must pass before continuing. The script verifies Python, pytest, hook script presence and permissions, `settings.json` registration, and runs the full test suite. If anything fails, fix it before proceeding — the script tells you exactly what is wrong.
 
 **3. Set your GCP project in `locals.tf`:**
 

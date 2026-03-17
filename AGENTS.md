@@ -173,16 +173,17 @@ Configures which hooks run and when:
 
 Uses `$CLAUDE_PROJECT_DIR` to locate hooks regardless of working directory.
 
-## Testing the Hooks
+## Verifying the Hooks
 
-Before relying on hooks in a new environment:
+Run the preflight script before starting work in this repo:
 
 ```bash
-chmod +x .claude/hooks/*.py
-pytest .claude/hooks/
+./check-hooks.sh
 ```
 
-Tests verify that blocked commands are denied, safe commands prompt for approval, non-terraform commands pass through unchanged, and terraform keywords inside git commit messages do not trigger false positives.
+This verifies that Python 3, pytest, and all hook scripts are present and correctly wired, checks execute permissions, smoke-tests the validator against both an allowed and a blocked command, and runs the full pytest suite.
+
+All checks must pass. The hooks provide a hard technical block on `terraform apply`, `terraform destroy`, and state manipulation commands, plus an audit trail of every terraform command attempted through Claude Code. Do not proceed until `check-hooks.sh` exits cleanly.
 
 ---
 
@@ -263,6 +264,21 @@ Activate tutorial mode when the user says any of:
 - "walk me through this"
 - "next exercise"
 - "I'm ready to start"
+
+### Preflight: Verify Hooks Before Starting
+
+Before presenting Exercise 01, run the preflight check yourself to determine hook status:
+
+```bash
+./check-hooks.sh
+```
+
+Read the output and set your understanding of hook status for the rest of the tutorial:
+
+- **All checks passed** → hooks are active. Tell the user: "The preflight check passed — safety hooks are operational. You'll see real hook enforcement during the exercises."
+- **Any check failed** → hooks are not active. Tell the user: "The preflight check found issues — hooks are not fully operational. The tutorial will still work, but you'll be running in reduced-safety mode: hook enforcement steps will be explained rather than demonstrated live. I'll flag this at each relevant point."
+
+Carry this hook status through all five exercises. Do not ask the user whether hooks are active — determine it from the script output.
 
 ### How to Guide Each Exercise
 
