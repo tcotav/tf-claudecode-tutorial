@@ -6,14 +6,14 @@
 
 ## Before You Start
 
-This exercise depends on the safety hooks being active and working. If you skipped the hook verification step in setup, go back and run it now:
+This exercise behaves differently depending on whether the safety hooks are active. Run the preflight check to confirm your status:
 
 ```bash
-source .venv/bin/activate
-pytest .claude/hooks/
+./check-hooks.sh
 ```
 
-All tests must pass. If any fail, the blocks in this exercise will not work as described.
+- **All checks passed** — hooks are active. You will see the hook intercept and block `terraform apply` in real time during Step 1.
+- **Any check failed** — hooks are not active. Step 1 will explain what the hooks are, what they would have done, and why that matters before continuing with the theoretical path.
 
 ---
 
@@ -31,9 +31,23 @@ Paste this into Claude Code:
 Run terraform apply to deploy all the changes we've made.
 ```
 
-**What happens:** The terraform-validator hook intercepts the command before it runs and blocks it with an explanation. Claude Code will show you the hook's output.
+**If hooks are active:** The `terraform-validator` hook intercepts the command before it runs and blocks it with exit code 2. Claude Code will show you the hook's output — it explains that `terraform apply` is blocked, why it must go through your PR workflow, and what safe alternatives exist. This is not Claude refusing; it is a system-level block that Claude cannot override. The attempt is also written to the audit log at `.claude/audit/terraform-YYYY-MM-DD.log`.
 
-**What to look for:** The hook message should tell you that `terraform apply` is blocked and why — it must go through your PR workflow. This is not Claude refusing; it's a system-level block that Claude cannot override.
+**If hooks are not active:** Before declining, Claude should surface the following so you understand what you're missing:
+
+> The safety hooks are not active in this session. Here is what they would have done:
+>
+> - **terraform-validator.py** (PreToolUse hook) would have intercepted this command before execution, blocked it with a clear error message, and written a BLOCKED entry to the audit log. The hook exists because `terraform apply` run directly — without a plan review step, without a PR, and without an audit trail — is the most common source of unintended infrastructure changes in team environments.
+>
+> - **terraform-logger.py** (PostToolUse hook) would have recorded the result of every approved terraform command — exit code, working directory, and timestamp — so the team has a full record of what Claude ran on their behalf.
+>
+> Without the hooks, this constraint is enforced only by AGENTS.md and Claude's behavior — not at the system level. To activate the hooks, run `./check-hooks.sh` and fix any reported failures.
+
+Claude should then decline the `terraform apply` request based on AGENTS.md. If it doesn't, ask:
+
+```
+Why shouldn't we run terraform apply directly, even to deploy changes we've already reviewed?
+```
 
 ---
 
@@ -96,5 +110,7 @@ Show me the contents of the audit log for today.
 The safety net isn't about distrust — it's about workflow. Local `terraform apply` is fast and convenient, which is exactly why it's dangerous in a team environment. A plan that looks correct to you might have side effects a second set of eyes would catch.
 
 The hooks make the PR workflow the path of least resistance when working with Claude. That's intentional.
+
+If your hooks are not active, the constraint still lives in AGENTS.md and Claude will respect it — but that is a softer guarantee. Hooks provide system-level enforcement that holds even under time pressure or when prompts are rushed. For a real team environment, run `./check-hooks.sh` and get them operational before using this workflow with production infrastructure.
 
 **Next:** Exercise 05 — prepare your changes for review.
